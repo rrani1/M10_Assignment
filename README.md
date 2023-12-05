@@ -1,6 +1,6 @@
 # M10_Assignment
 
-Part I: Create web-scraper to load CSV file into S3 Bucket
+	Part I: Create web-scraper to load CSV file into S3 Bucket
 Step 1: Load the script into your repository
 Create a new repository named "M10_Assignment" on GitHub.
 Inside the repository, create the following folders: images, files, and scripts.

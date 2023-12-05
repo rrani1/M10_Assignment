@@ -1,44 +1,73 @@
-# M10_Assignment
+# Load libraries
+import awscli
+import selenium
+import boto3
+import pandas as pd
+import time
 
-	Part I: Create web-scraper to load CSV file into S3 Bucket
-Step 1: Load the script into your repository
-Create a new repository named "M10_Assignment" on GitHub.
-Inside the repository, create the following folders: images, files, and scripts.
-Upload the M10_webscraper_assignment.ipybn script to the scripts folder.
-Step 2: Create an S3 bucket
-Install and configure awscli and boto3.
-Create an S3 bucket using the AWS Management Console or CLI. Let's assume you name it "database-update-bucket."
-Step 3: Update the script to include your S3 path
-Open the script M10_webscraper_assignment.ipybn using a text editor or Jupyter Notebook.
-Locate the part of the script where the S3 path is specified and update it with your bucket name.
-Step 4: Test the script
-Run the script and inspect the output on your S3 bucket.
-Ensure that the CSV file is successfully uploaded to the specified S3 path.
-Step 5: Commit changes to GitHub
-Commit the changes to the master branch of your GitHub repository.
-Step 6: Remove the blank row in the CSV output file
-Identify the part of the script that generates the CSV file and modify it to remove the blank row in the header.
-Step 7: Test the modified script
-Run the modified script and inspect the output on your S3 bucket.
-Ensure that the CSV file now has no blank row in the header.
-Step 8: Commit changes to GitHub
-Commit the changes to the master branch of your GitHub repository.
-Step 9: Provide evidence of successful update
-Share the link to your S3 bucket where the CSV file is stored.
-Provide the link to the updated M10_webscraper_assignment.ipybn file in your GitHub repository.
-Step 10: Update README.md
-Update the README.md file in your repository to reflect the script actions, changes made, and proper documentation.
+from selenium import webdriver
 
-Part II: Update web-scraper to iterate all results
-Step 11: Modify the script for pagination
-Alter the script to iterate through the pagination on the Charities Bureau Website.
-Compile all results into one dataframe from each page.
-Step 12: Test the modified script
-Run the modified script and inspect the output on your S3 bucket.
-Ensure that the CSV file contains data from all pages without skipped headers.
-Step 13: Commit changes to GitHub
-Commit the changes to the master branch of your GitHub repository.
-Step 14: Add instructor as a collaborator
-Add your instructor as a collaborator to the GitHub repository.
-Step 15: Submit the assignment
-Reply to the assignment with the link to your GitHub repository.
+# SCRAPE THE WEBSITE
+# Call the webdriver
+browser = webdriver.Chrome(r"C:\Users\Rekha Chaudhary\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe")
+
+# Enter the URL path that needs to be accessed by webdriver
+browser.get('https://www.charitiesnys.com/RegistrySearch/search_charities.jsp')
+
+# Identify xpath of location to select element
+inputElement = browser.find_element('xpath', "/html/body/div/div[2]/div/table/tbody/tr/td[2]/div/div/font/font/font/font/font/font/table/tbody/tr[4]/td/form/table/tbody/tr[2]/td[2]/input[1]")
+inputElement.send_keys('0')
+inputElement1 = browser.find_element('xpath', "/html/body/div/div[2]/div/table/tbody/tr/td[2]/div/div/font/font/font/font/font/font/table/tbody/tr[4]/td/form/table/tbody/tr[10]/td/input[1]").click()
+
+# Identify the table to scrape
+table = browser.find_element('css selector', 'table.Bordered')
+
+print(table)
+
+# Create empty dataframe
+df = []
+
+# Locate the table
+table = browser.find_element(By.CSS_SELECTOR, 'table.Bordered')
+
+# Locate the rows inside the table using By.TAG_NAME
+rows = table.find_elements(By.TAG_NAME, 'tr')
+
+# Loop through dataframe to export table
+for row in rows:
+    cols = df.append([cell.text for cell in row.find_elements(By.TAG_NAME, 'td')])
+
+# Update dataframe with header
+df = pd.DataFrame(df[1:], columns=["Organization Name", "NY Reg #", "EIN", "Registrant Type", "City", "State"])
+
+# Display the DataFrame in tabular format
+display(df)
+
+import pandas as pd
+import boto3
+import time
+
+
+
+# Construct S3 key (object key)
+s3_key = 'charities_bureau_scrape_' + time.strftime("%Y%m%d%H%M%S") + '.csv'
+
+# Load file into S3
+df.to_csv(s3_key, header=True, index=False)
+
+# Specify your S3 bucket name
+bucket_name = 'database-update-bucket-rani'
+
+# Explicitly set AWS credentials and region
+aws_access_key_id = 'AKIA4OPMEVP4AQPSEP7N'
+aws_secret_access_key = 'r65xsgrxIsVGA4wMfhzOFJHPKyWQZdFyTk+VAdkP'
+region_name = 'us-east-1'  # Replace with your region
+
+# Create an S3 client
+s3 = boto3.client('s3', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=region_name)
+
+# Upload the file to S3
+s3.upload_file(s3_key, bucket_name, s3_key)
+
+# Print success message
+print("Successfully uploaded file to S3 with key: " + s3_key)
